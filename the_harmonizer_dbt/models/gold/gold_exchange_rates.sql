@@ -1,6 +1,6 @@
 SELECT 
    *
-FROM {{ source('source','dim_product') }}
+FROM {{ source('source','exchange_rates') }}
 
 
 {# we can also write like this but best practice is to get it from source using jinja function  #}

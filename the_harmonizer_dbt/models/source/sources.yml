@@ -1,7 +1,7 @@
 sources:
   - name: source
     database: THE_GLOBAL_MARKET_HARMONIZER  
-    schema: source  
+    schema: raw  
     tables:
       - name: exchange_rates
       - name: products

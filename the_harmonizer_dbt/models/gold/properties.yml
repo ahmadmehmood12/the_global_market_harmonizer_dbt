@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: gold_exchange_rates #  Must match the filename of a model -- including case sensitivity.
+    config:
+      materialized: table
+      schema: gold
+
+  - name: gold_products #  Must match the filename of a model -- including case sensitivity.
+    config:
+      materialized: table
+      schema: gold
+
+  - name: gold_internal_orders #  Must match the filename of a model -- including case sensitivity.
+    config:
+      materialized: table
+      schema: gold

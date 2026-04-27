@@ -1,4 +1,3 @@
-
 # Name your project! Project names should contain only lowercase characters
 # and underscores. A good package name should reflect your organization's
 # name or the intended use of these models
@@ -32,17 +31,11 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   the_harmonizer_dbt:
     # Config indicated by + and applies to all files under models/example/
-    bronze:
-      +materialized: table
-      schema: bronze
-    silver:
-      +materialized: table
-      schema: silver
-    gold:
+    raw:
       +materialized: table
       schema: gold
 
 
 seeds:
   the_harmonizer_dbt:
-    +schema: bronze
+    +schema: SAMPLE
