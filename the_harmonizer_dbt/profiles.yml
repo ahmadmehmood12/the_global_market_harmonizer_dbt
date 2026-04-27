@@ -1,13 +1,15 @@
 the_harmonizer_dbt:
   outputs:
     dev:
-      catalog: dbt_tutorial_dev
-      host: dbc-192b1f2f-6be7.cloud.databricks.com
-      http_path: /sql/1.0/warehouses/61180a7566339d5b
-      schema: default
+      account: ZHBCXJF-KW09525
+      database: THE_GLOBAL_MARKET_HARMONIZER
+      password: AhmadMehmood1332
+      role: Accountadmin
+      schema: RAW
       threads: 1
-      token: 
-      type: databricks
+      type: snowflake
+      user: AHMADMEHMOOD1252
+      warehouse: COMPUTE_WH
   target: dev
 
 
