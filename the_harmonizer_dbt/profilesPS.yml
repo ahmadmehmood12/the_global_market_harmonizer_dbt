@@ -1,0 +1,11 @@
+the_harmonizer_dbt:
+  outputs:
+    dev:
+      catalog: dbt_tutorial_dev
+      host: dbc-192b1f2f-6be7.cloud.databricks.com
+      http_path: /sql/1.0/warehouses/61180a7566339d5b
+      schema: raw
+      threads: 1
+      token: 
+      type: snowflake
+  target: dev
