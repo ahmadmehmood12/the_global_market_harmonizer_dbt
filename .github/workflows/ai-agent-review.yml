@@ -2,22 +2,24 @@ name: AI Agentic Code Review
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
     branches:
       - main
 
 permissions:
   contents: read
   pull-requests: write
-  checks: write
   statuses: write
+  checks: write
   issues: write
 
 jobs:
   ai-review:
+    name: AI Review Audit
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -27,153 +29,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          pip install openai requests
+          python -m pip install --upgrade pip
+          pip install requests
 
-      - name: Generate PR Diff
-        run: |
-          git diff origin/${{ github.base_ref }}...HEAD > pr.diff
-
-      - name: Create AI Review Script
-        run: |
-          mkdir -p .github/scripts
-
-          cat <<'PYTHON' > .github/scripts/ai_review.py
-          import json
-          import os
-          import requests
-          from openai import OpenAI
-
-          client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-
-          PR_NUMBER = os.environ["PR_NUMBER"]
-          REPO_NAME = os.environ["REPO_NAME"]
-          GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
-
-          with open("pr.diff", "r", encoding="utf-8") as f:
-              diff = f.read()
-
-          SYSTEM_PROMPT = """
-          You are a strict Principal Software Engineer reviewing production code.
-
-          Perform a deep enterprise-grade code review.
-
-          Verify:
-          - Exception handling
-          - No silent failures
-          - Proper logging
-          - Monitoring and observability
-          - Alerting for failures
-          - Security vulnerabilities
-          - Hardcoded secrets
-          - Unsafe subprocess execution
-          - SQL injection risks
-          - Missing retries/timeouts
-          - Async issues
-          - Bad coding practices
-          - Maintainability
-          - Scalability
-          - Reliability
-          - Production readiness
-
-          Return ONLY valid JSON in this format:
-
-          {
-            "status": "PASS or FAIL",
-            "summary": "...",
-            "issues": [
-              {
-                "severity": "LOW|MEDIUM|HIGH|CRITICAL",
-                "file": "filename",
-                "problem": "description",
-                "recommendation": "fix"
-              }
-            ]
-          }
-
-          FAIL if major issues exist.
-          """
-
-          response = client.chat.completions.create(
-              model="gpt-4.1",
-              temperature=0,
-              messages=[
-                  {
-                      "role": "system",
-                      "content": SYSTEM_PROMPT
-                  },
-                  {
-                      "role": "user",
-                      "content": diff
-                  }
-              ]
-          )
-
-          content = response.choices[0].message.content.strip()
-
-          try:
-              review = json.loads(content)
-          except Exception:
-              review = {
-                  "status": "FAIL",
-                  "summary": "Invalid AI response",
-                  "issues": [
-                      {
-                          "severity": "CRITICAL",
-                          "file": "unknown",
-                          "problem": "AI returned invalid JSON",
-                          "recommendation": "Check model output"
-                      }
-                  ]
-              }
-
-          with open("ai-review-report.json", "w") as f:
-              json.dump(review, f, indent=2)
-
-          body = f"""
-          # AI Agentic Review Result
-
-          ## Status
-          **{review['status']}**
-
-          ## Summary
-          {review.get('summary', '')}
-
-          ## Findings
-          ```json
-          {json.dumps(review, indent=2)}
-          ```
-          """
-
-          url = f"https://api.github.com/repos/{REPO_NAME}/issues/{PR_NUMBER}/comments"
-
-          headers = {
-              "Authorization": f"Bearer {GITHUB_TOKEN}",
-              "Accept": "application/vnd.github+json"
-          }
-
-          requests.post(
-              url,
-              headers=headers,
-              json={"body": body}
-          )
-
-          if review["status"] == "FAIL":
-              raise Exception("AI review failed")
-          PYTHON
-
-      - name: Run AI Review
+      - name: Run AI review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO_NAME: ${{ github.repository }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
           python .github/scripts/ai_review.py
 
-      - name: Upload Audit Report
+      - name: Upload AI review audit artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-review-audit
+          name: ai-review-audit-${{ github.run_id }}
           path: ai-review-report.json
